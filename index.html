@@ -365,4 +365,111 @@ $('#fb').scrollIntoView({behavior:'smooth',block:'nearest'});
  
 /* ---------- ランモード（読み上げ） ---------- */
 function pickVoice(){const v=speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang));JV=v.find(v=>/Kyoko|O-ren|Google/.test(v.name))||v[0]||null}
-if('speechSynthesis' in window){pickVoice();speechSynthesis.
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(text,g){
+  return new Promise(res=>{
+    const parts=text.replace(/([。？！?])/g,'$1\n').split('\n').map(s=>s.trim()).filter(s=>s.replace(/[。？！?、\s]/g,''));
+    let i=0;
+    const nx=()=>{
+      if(g!==undefined&&g!==gen)return res(false);
+      if(i>=parts.length)return res(true);
+      const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='ja-JP';if(JV)u.voice=JV;u.rate=SET.rate;
+      let d=false;const fin=()=>{if(d)return;d=true;clearTimeout(t);nx()};
+      const t=setTimeout(fin,(u.text.length*0.35/SET.rate+5)*1000);
+      u.onend=fin;u.onerror=fin;speechSynthesis.speak(u)};
+    nx()})}
+function unlockSpeak(t){if(!('speechSynthesis' in window)){alert('この端末は読み上げに対応していません');return}speechSynthesis.cancel();say(t)}
+async function runQ(again){
+  const g=++gen;let q;
+  if(again&&S.cur)q=S.cur.q;
+  else{if(S.n>0&&left()<=0)return finish();q=pick();if(!q)return finish();S.n++;S.cur={q,opts:shuf([q.a,...q.w]),graded:false,heard:false}}
+  const c=S.cur,k=c.opts.indexOf(q.a),rg=$('#rgrade');
+  $('#rinfo').textContent=info();
+  $('#rtag').textContent=`${q.ch}. ${CH[q.ch]}　${stars(q.lv)}`;
+  $('#rq').textContent=q.q;
+  $('#ropts').innerHTML=c.opts.map((o,i)=>`<div class="ro">${i+1}. ${esc(o)}</div>`).join('');
+  $('#rans').textContent='';rg.className='';$('#rst').textContent='🔊 問題';
+  if(!await say(`第${S.n}問。${q.q}。`+c.opts.map((o,i)=>`${i+1}番、${o}。`).join(''),g))return;
+  for(let s=SET.think;s>0;s--){if(g!==gen)return;$('#rst').textContent='🤔 考え中… '+s;await sleep(1000)}
+  if(g!==gen)return;
+  $('#ropts').children[k].classList.add('good');$('#rans').textContent='💡 '+q.ex;
+  rg.className='on'+(c.graded?' done':'');$('#rst').textContent='✅ 正解は '+(k+1)+'番';
+  if(!c.heard){c.heard=true;S.heard++}
+  if(!await say(`正解は、${k+1}番、${q.a}。${q.ex}`,g))return;
+  $('#rst').textContent='⏭ 次の問題へ';await sleep(3000);
+  if(g!==gen)return;runQ();
+}
+function grade(ok){const c=S&&S.cur;if(!c||c.graded)return;c.graded=true;record(c.q,!!ok);$('#rgrade').classList.add('done');$('#rinfo').textContent=info()}
+function togglePause(){
+  if(!S)return;paused=!paused;
+  if(paused){S.pz=Date.now();gen++;speechSynthesis.cancel();$('#rst').textContent='⏸ 一時停止中';$('#rpause').textContent='▶ 再開'}
+  else{S.t0+=Date.now()-S.pz;S.pz=0;$('#rpause').textContent='⏸ 一時停止';runQ(true)}
+}
+
+/* ---------- 終了 ---------- */
+function finish(){
+  if(!S)return go('home');
+  gen++;try{speechSynthesis.cancel()}catch(e){}
+  clearInterval(timer);if(wake){wake.release().catch(()=>{});wake=null}
+  const m=Math.max(1,Math.round((Date.now()-S.t0)/60000)),rec=S.ok+S.ng,rate=rec?Math.round(S.ok/rec*100):0;
+  $('#dsum').innerHTML=`<div class="big2">${rate}<small>%</small></div>
+  <p>${S.mode=='run'?'聞いた問題 '+S.heard+'問／記録 '+rec+'問':'解いた問題 '+rec+'問'}</p>
+  <p>⭕ ${S.ok}　❌ ${S.ng}　⏱ 約${m}分</p><p>復習待ち：${poolFor('rev').length}問</p>`;
+  S=null;paused=false;go('done');
+}
+
+/* ---------- 画面 ---------- */
+function renderHome(){
+  const d=Math.ceil((EXAM-Date.now())/86400000);
+  $('#cd').textContent=d>0?`📅 G検定 2027/1/16 まであと ${d} 日`:'📅 試験日を過ぎました';
+  let a=0,c=0,n=0;Object.values(ST.q).forEach(s=>{a+=s.a;c+=s.c;n++});
+  $('#hsum').textContent=`全${ALL.length}問　解いた問題 ${n}　正答率 ${a?Math.round(c/a*100):0}%　今日 ${ST.days[today()]||0}問`;
+  $('#mins').innerHTML=[10,15,20,30,45,60].map(m=>`<button class="chip${SET.min==m?' sel':''}" onclick="SET.min=${m};saveSET();renderHome()">${m}分</button>`).join('');
+  $('#revn').textContent='間違えた問題 '+poolFor('rev').length+'問';
+}
+function renderStats(){
+  const acc=chAcc();let h='';
+  for(let c=1;c<=7;c++){
+    const qs=ALL.filter(q=>q.ch==c),done=qs.filter(q=>ST.q[q.id]).length,A=acc[c],r=A.a?Math.round(A.c/A.a*100):0;
+    const col=!A.a?'#444':r<60?'#e33':r<80?'#fc3':'#0c6';
+    h+=`<div class="st"><div class="stn">${c}. ${CH[c]}</div><div class="sbar"><i style="width:${A.a?r:0}%;background:${col}"></i></div>
+    <div class="sts">正答率 ${A.a?r+'%':'—'}　解いた ${done}/${qs.length}問　回答 ${A.a}回</div></div>`}
+  const days=[];for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*86400000),k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();days.push(`${d.getMonth()+1}/${d.getDate()}：${ST.days[k]||0}問`)}
+  h+=`<h2>直近7日</h2><div class="sts">${days.join('<br>')}</div>
+  <div class="tip">合格ラインは公表されていません。全分野で正答率80%以上を目標にしましょう。正答率の低い分野は自動で多めに出題されます。</div>`;
+  $('#stbody').innerHTML=h;
+}
+const chip=(on,label,fn,w)=>`<button class="chip${w?' w':''}${on?' sel':''}" onclick="${fn}">${label}</button>`;
+function renderSet(){
+  $('#chs').innerHTML=CH.slice(1).map((n,i)=>{const on=SET.ch.includes(i+1);return chip(on,`${on?'☑':'☐'} ${i+1}. ${n}（${ALL.filter(q=>q.ch==i+1).length}問）`,`tog('ch',${i+1})`,1)}).join('');
+  $('#lvs').innerHTML=[[1,'★ 基礎'],[2,'★★ 標準'],[3,'★★★ 応用']].map(([v,l])=>chip(SET.lv.includes(v),l,`tog('lv',${v})`)).join('');
+  $('#rates').innerHTML=[0.8,1,1.2,1.5].map(v=>chip(SET.rate==v,v+'倍',`SET.rate=${v};saveSET();renderSet()`)).join('');
+  $('#thinks').innerHTML=[3,5,8,12].map(v=>chip(SET.think==v,v+'秒',`SET.think=${v};saveSET();renderSet()`)).join('');
+  $('#xinfo').innerHTML=`内蔵 ${CNT.base}問／自動読み込み ${CNT.auto}問／手動追加 ${CNT.extra}問<br>${esc(AUTOMSG||'自動読み込み：確認中…')}`;
+}
+function tog(k,v){const a=SET[k],i=a.indexOf(v);if(i>=0){if(a.length==1){alert('1つ以上選んでください');return}a.splice(i,1)}else a.push(v);saveSET();renderSet()}
+function exportCSV(){
+  const f=s=>{s=String(s??'');return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  const rows=[['分野','難易度','問題','正解','誤答1','誤答2','誤答3','解説','計算'],...ALL.map(q=>[q.ch,q.lv,q.q,q.a,...q.w,q.ex,q.calc?1:0])];
+  const blob=new Blob(['\uFEFF'+rows.map(r=>r.map(f).join(',')).join('\r\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gkentei_questions.csv';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}
+$('#csvin').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;const r=new FileReader();
+  r.onload=()=>{const have=new Set(ALL.map(q=>q.id)),ex=LS.get('gk_extra',[]);let n=0;
+    csvQs(r.result,'extra').forEach(q=>{if(!have.has(q.id)){have.add(q.id);ex.push(q);n++}});
+    LS.set('gk_extra',ex);rebuild();renderSet();
+    alert(n+'問を追加しました'+(n?'':'（形式が違うか、すでに登録済みの問題です）'));e.target.value=''};
+  r.readAsText(file,'UTF-8')});
+function clearExtra(){if(confirm('手動で追加した問題を削除しますか？（自動読み込みの問題は残ります）')){LS.set('gk_extra',[]);rebuild();renderSet()}}
+function resetStat(){if(confirm('成績をすべてリセットしますか？')){ST={q:{},days:{}};saveST();renderSet()}}
+function go(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==id));
+  if(id=='home')renderHome();if(id=='stats')renderStats();if(id=='set')renderSet();scrollTo(0,0);
+}
+
+rebuild();go('home');autoLoad();
+</script>
+</body>
+</html>
