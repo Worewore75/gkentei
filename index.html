@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#000000">
+<title>G検定ジム</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#000;color:#fff;font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:20px;line-height:1.5;-webkit-user-select:none;user-select:none}
+.scr{display:none;min-height:100vh;padding:16px 14px 120px}
+.scr.on{display:block}
+h1{font-size:28px;margin:10px 0 12px}
+h2{font-size:17px;color:#aaa;margin:18px 0 6px}
+.cd{background:#311;color:#fc6;padding:10px;border-radius:12px;text-align:center;font-weight:bold}
+.sub{color:#aaa;font-size:15px;margin-bottom:6px}
+.big{display:block;width:100%;padding:20px;margin:10px 0;font-size:24px;font-weight:bold;border:none;border-radius:16px;color:#fff;background:#333;text-align:left}
+.big small{display:block;font-size:15px;font-weight:normal;opacity:.85}
+.bike{background:#0a5}.run{background:#06c}.rev{background:#c60}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{flex:1;min-width:72px;padding:14px 8px;font-size:17px;border:2px solid #444;border-radius:12px;background:#111;color:#fff;text-align:center}
+.chip.sel{border-color:#ff0;color:#ff0}
+.chip.w{display:block;width:100%;text-align:left;margin:6px 0}
+.danger{border-color:#a33;color:#f88}
+.bar{display:flex;justify-content:space-between;align-items:center;color:#aaa;font-size:16px;gap:8px}
+.x{background:#333;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:16px}
+.tag{color:#6cf;font-size:15px;margin:10px 0 4px}
+.q{font-size:22px;font-weight:bold;margin:4px 0 14px;line-height:1.55}
+.opt{display:flex;align-items:center;width:100%;min-height:74px;padding:12px;margin:8px 0;font-size:19px;text-align:left;border:2px solid #333;border-radius:14px;background:#151515;color:#fff}
+.opt .no{flex:0 0 40px;height:40px;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center;margin-right:12px;font-weight:bold}
+.good{border-color:#0c6!important;background:#063!important}
+.bad{border-color:#e33!important;background:#511!important}
+.dim{opacity:.35}
+#fb{display:none;background:#111;border-radius:14px;padding:14px;margin-top:8px}
+#res{font-size:26px;font-weight:bold;margin-bottom:6px}
+.okc{color:#0f8}.ngc{color:#f55}
+#ex{font-size:18px;color:#ddd}
+#next{display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));height:80px;font-size:28px;font-weight:bold;border:none;border-radius:18px;background:#ff0;color:#000}
+#rst{font-size:26px;color:#ff0;font-weight:bold;margin:10px 0;min-height:40px}
+.ro{padding:8px 0;font-size:19px;border-bottom:1px solid #222}
+.ro.good{color:#0f8;font-weight:bold;background:none!important}
+#rans{color:#ccc;margin:10px 0;font-size:17px}
+#rgrade{display:none;gap:8px;margin:8px 0}
+#rgrade.on{display:flex}
+#rgrade.done .gb{opacity:.3}
+.gb{flex:1;height:90px;font-size:22px;border:none;border-radius:16px;color:#fff;font-weight:bold}
+.gok{background:#063}.gng{background:#611}
+.rbtm{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#000}
+.rbtm button{flex:1;height:80px;font-size:22px;border:none;border-radius:16px;background:#333;color:#fff;font-weight:bold}
+#rpause{flex:2;background:#06c}
+.st{margin:14px 0}.stn{font-size:17px}
+.sbar{height:14px;background:#222;border-radius:7px;overflow:hidden;margin:4px 0}
+.sbar i{display:block;height:100%}
+.sts{font-size:14px;color:#aaa}
+.big2{font-size:72px;font-weight:bold;text-align:center;color:#ff0}
+.big2 small{font-size:30px}
+#done p{text-align:center;color:#ccc;margin:6px 0}
+.tip{background:#112;color:#9cf;padding:10px;border-radius:10px;font-size:15px;margin:10px 0}
+</style>
+</head>
+<body>
+ 
+<div id="home" class="scr on">
+<div class="cd" id="cd"></div>
+<h1>G検定ジム 🏋️</h1>
+<div class="sub" id="hsum"></div>
+<h2>今日の時間</h2>
+<div class="row" id="mins"></div>
+<button class="big bike" onclick="start('bike')">🚴 バイクモード<small>大きなボタンで4択</small></button>
+<button class="big run" onclick="start('run')">🏃 ランモード<small>イヤホンで聞き流し・操作不要</small></button>
+<button class="big rev" onclick="start('rev')">🔁 復習モード<small id="revn"></small></button>
+<div class="row"><button class="chip" onclick="go('stats')">📊 成績</button><button class="chip" onclick="go('set')">⚙️ 設定</button></div>
+</div>
+ 
+<div id="quiz" class="scr">
+<div class="bar"><span id="qinfo"></span><span id="qtime"></span><button class="x" onclick="finish()">■ 終了</button></div>
+<div class="tag" id="qtag"></div>
+<div class="q" id="qtext"></div>
+<div id="opts"></div>
+<div id="fb"><div id="res"></div><div id="ex"></div></div>
+<button id="next" onclick="showQ()">次へ ▶</button>
+</div>
+ 
+<div id="run" class="scr">
+<div class="bar"><span id="rinfo"></span><span id="rtime"></span></div>
+<div id="rst"></div>
+<div class="tag" id="rtag"></div>
+<div class="q" id="rq"></div>
+<div id="ropts"></div>
+<div id="rans"></div>
+<div id="rgrade"><button class="gb gok" onclick="grade(1)">⭕ 正解した</button><button class="gb gng" onclick="grade(0)">❌ 間違えた</button></div>
+<div class="rbtm"><button id="rpause" onclick="togglePause()">⏸ 一時停止</button><button onclick="finish()">■ 終了</button></div>
+</div>
+ 
+<div id="done" class="scr"><h1>おつかれさま！💪</h1><div id="dsum"></div><button class="big" onclick="go('home')">ホームへ</button></div>
+ 
+<div id="stats" class="scr"><h1>📊 成績</h1><div id="stbody"></div><button class="big" onclick="go('home')">戻る</button></div>
+ 
+<div id="set" class="scr">
+<h1>⚙️ 設定</h1>
+<h2>出題する分野</h2><div id="chs"></div>
+<h2>難易度</h2><div class="row" id="lvs"></div>
+<h2>読み上げ速度（ラン）</h2><div class="row" id="rates"></div>
+<h2>考える時間（ラン）</h2><div class="row" id="thinks"></div>
+<button class="chip w" onclick="unlockSpeak('音声テストです。ランニング中は、この声で問題を読み上げます。')">🔊 音声テスト</button>
+<h2>問題の追加・編集（Excel）</h2>
+<div class="sub" id="xinfo"></div>
+<button class="chip w" onclick="exportCSV()">⬇ 全問題をCSVで書き出す</button>
+<label class="chip w">⬆ CSVを読み込む（問題を追加）<input type="file" accept=".csv,text/csv" id="csvin" hidden></label>
+<button class="chip w" onclick="clearExtra()">追加した問題を削除</button>
+<button class="chip w danger" onclick="resetStat()">成績をリセット</button>
+<button class="big" onclick="go('home')">戻る</button>
+</div>
+ 
+<script>
+const EXAM=new Date('2027-01-16T13:00:00+09:00');
+const CH=["","人工知能とは・動向","機械学習","ディープラーニングの概要","ディープラーニングの要素技術","応用・生成AI","社会実装・数理統計","法律・倫理・ガバナンス"];
+// [分野, 難易度1-3, 問題, 正解, 誤答1, 誤答2, 誤答3, 解説, 計算=1]
+const BASE=[
+[1,1,"1956年のダートマス会議で「人工知能（Artificial Intelligence）」という言葉を初めて使った人物は？","ジョン・マッカーシー","アラン・チューリング","ジェフリー・ヒントン","ヤン・ルカン","ダートマス会議はマッカーシーらが提案した研究会で、ここで初めて人工知能という言葉が使われた。"],
+[1,1,"第1次AIブーム（1950年代後半〜1960年代）の中心となった技術は？","探索・推論","エキスパートシステム","ディープラーニング","統計的機械翻訳","第1次は探索・推論、第2次は知識（エキスパートシステム）、第3次は機械学習・ディープラーニング。"],
+[1,1,"第2次AIブーム（1980年代）の中心となった技術は？","エキスパートシステム","探索木による迷路の解法","ディープラーニング","強化学習","専門家の知識をルールとして入れるエキスパートシステムが流行した。"],
+[1,2,"第1次AIブームが終わった主な理由は？","簡単なトイ・プロブレムしか解けず、現実の複雑な問題に対応できなかった","計算機が一台も存在しなかった","インターネットが普及していなかった","著作権法で研究が禁止された","迷路やパズルのようなルールが決まった問題は解けたが、現実の問題は解けないとわかり冬の時代に入った。"],
+[1,2,"第2次AIブームの衰退につながった「知識獲得のボトルネック」とは？","専門家の知識をルールとして書き出し、維持するのが非常に大変だという問題","GPUの性能が不足していた問題","学習データにラベルを付けられない問題","AIが自分で知識を獲得しすぎる問題","人間の暗黙知や常識をすべてルール化するのは難しく、エキスパートシステムの限界となった。"],
+[1,1,"チューリングテストで判定しようとしたものは？","機械が人間と区別できないような会話をできるか","機械が画像を正しく分類できるか","機械の計算速度","機械が自分で学習できるか","別室の相手が人間か機械か判別できなければ、その機械には知能があるとみなすテスト。"],
+[1,2,"ジョン・サールが「中国語の部屋」で主張したことは？","記号を規則どおりに操作できても、意味を理解しているとは限らない","中国語は機械翻訳が最も難しい言語である","チューリングテストに合格すれば知能があると言える","AIは身体を持たなければ学習できない","チューリングテストへの批判。サールは強いAIと弱いAIという区別も提唱した。"],
+[1,2,"記号（言葉）と、それが指す実世界の意味をコンピュータが結びつけられない問題を何という？","シンボルグラウンディング問題","フレーム問題","次元の呪い","勾配消失問題","ハルナッドが提唱。シマウマをシマとウマという記号で知っていても、実物と結びつかないという例が有名。"],
+[1,2,"「今しようとしていることに関係ある事柄だけを選び出すことが難しい」というAIの問題は？","フレーム問題","シンボルグラウンディング問題","知識獲得のボトルネック","モラベックのパラドックス","マッカーシーとヘイズが提唱。爆弾を運ぶロボットの例が有名。"],
+[1,2,"1960年代にワイゼンバウムが開発し、精神療法士のように応答した対話プログラムは？","ELIZA","MYCIN","DENDRAL","SHRDLU","パターンに合わせて返答するだけだったが、人が本気で対話してしまうイライザ効果で知られる。"],
+[1,2,"血液の細菌感染の診断と、抗生物質の推奨を行ったエキスパートシステムは？","MYCIN","DENDRAL","ELIZA","Watson","MYCINはスタンフォード大学で開発された。DENDRALは有機化合物の構造を推定するシステム。"],
+[1,1,"レイ・カーツワイルが、技術的特異点（シンギュラリティ）が来ると予測した年は？","2045年","2020年","2100年","2030年","カーツワイルは2045年にシンギュラリティが到来すると予測した。"],
+[1,2,"第3次AIブームのきっかけとされる2012年の出来事は？","画像認識コンテストILSVRCで、ディープラーニングを使ったチームが圧勝した","AlphaGoが囲碁のトップ棋士に勝った","ChatGPTが公開された","ダートマス会議が開かれた","トロント大学ヒントンらのAlexNetが、従来手法を大きく上回る成績で優勝した。"],
+[1,2,"ゲーム木の探索で、自分の手番では評価値が最大、相手の手番では最小になる手を選ぶと仮定する方法は？","Mini-Max法","モンテカルロ法","幅優先探索","ε-greedy法","Mini-Max法の無駄な探索を省く方法がαβ法。"],
+[1,3,"幅優先探索と深さ優先探索の説明として正しいものは？","幅優先探索は最短の解を見つけられるが、メモリを多く使う","深さ優先探索は必ず最短の解を見つける","幅優先探索はメモリをほとんど使わない","両者は探索の順番以外まったく同じ性能である","深さ優先探索はメモリが少なくて済むが、最短の解とは限らない。"],
+[1,3,"オントロジーにおける is-a 関係と part-of 関係の説明として正しいものは？","is-a関係では推移律が成り立つが、part-of関係では常に成り立つとは限らない","part-of関係では必ず推移律が成り立つ","is-a関係は全体と部分を表す","両方とも推移律は成り立たない","is-aは上位と下位の概念の関係で、人間は哺乳類、など。part-ofは全体と部分の関係。"],
+[1,2,"2011年にクイズ番組Jeopardy!で人間のチャンピオンに勝ったIBMのシステムは？","Watson","Deep Blue","AlphaGo","Siri","Watsonは質問応答システム。Deep Blueは1997年にチェスの世界チャンピオンに勝ったIBMのシステム。"],
+ 
+[2,1,"正解ラベル付きのデータを使って、入力から出力を予測するモデルを学習する方法は？","教師あり学習","教師なし学習","強化学習","自己教師あり学習","教師あり学習は、数値を予測する回帰と、カテゴリを当てる分類に分かれる。"],
+[2,1,"教師あり学習のうち、売上や気温など連続した数値を予測するタスクは？","回帰","分類","クラスタリング","次元削減","カテゴリを当てるのが分類、数値を当てるのが回帰。"],
+[2,3,"ロジスティック回帰の説明として正しいものは？","名前に回帰とつくが、主に分類に使われる手法である","連続値の予測専用の手法である","教師なし学習の手法である","決定木を多数組み合わせる手法である","シグモイド関数で0から1の確率を出力し、2クラス分類などに使う。ひっかけに注意。"],
+[2,1,"データをあらかじめ決めたk個のグループに分ける、教師なし学習の手法は？","k-means法","k近傍法","ロジスティック回帰","サポートベクターマシン","k近傍法は教師ありの分類手法なので混同に注意。"],
+[2,2,"相関のある多数の変数を、少数の無相関な変数にまとめる次元削減の手法は？","主成分分析（PCA）","ランダムフォレスト","Q学習","k近傍法","PCAは教師なし学習の代表的な次元削減手法。"],
+[2,1,"エージェントが環境の中で行動し、得られる報酬の合計を最大にするよう学習する方法は？","強化学習","教師あり学習","教師なし学習","転移学習","囲碁やロボット制御などで使われる。"],
+[2,2,"ランダムフォレストの説明として正しいものは？","データや特徴量をランダムに選んで多数の決定木を作り、多数決などでまとめる","1本の深い決定木だけを使う","弱いモデルを順番に学習させ、前の誤りを重点的に直す","ニューラルネットワークの一種である","並列に学習して結果をまとめるのがバギングで、ランダムフォレストはその代表例。"],
+[2,2,"弱いモデルを順番に作り、前のモデルが間違えたデータを重視して学習していくアンサンブル手法は？","ブースティング","バギング","ドロップアウト","交差検証","勾配ブースティングなどが代表。バギングは並列、ブースティングは逐次と覚える。"],
+[2,2,"サポートベクターマシン（SVM）の基本的な考え方は？","クラス間のマージン（境界との距離）を最大化する","誤差を出力層から入力層へ逆伝播させる","データをk個のクラスタに分ける","報酬を最大化する行動を学ぶ","カーネル法を使うと、非線形な分類もできる。"],
+[2,1,"訓練データにはよく当てはまるが、未知のデータでは性能が低い状態を何という？","過学習","未学習","汎化","正則化","対策には、正則化、データを増やす、モデルを単純にするなどがある。"],
+[2,3,"L1正則化（Lasso）の特徴として正しいものは？","一部のパラメータを0にしやすく、不要な特徴量を選別する効果がある","すべてのパラメータを均等に大きくする","過学習を促進する","パラメータを0にすることは決してない","L2正則化（Ridge）はパラメータ全体を小さく滑らかにする。"],
+[2,2,"データをk個に分け、1つを評価用、残りを学習用にする組み合わせを順に替えて評価する方法は？","k-分割交差検証","ホールドアウト法","ブートストラップ法","グリッドサーチ","ホールドアウト法は、訓練用とテスト用に1回だけ分ける方法。"],
+[2,2,"適合率（Precision）の説明として正しいものは？","陽性と予測したもののうち、実際に陽性だった割合","実際に陽性のもののうち、陽性と予測できた割合","全データのうち、予測が当たった割合","陰性と予測したもののうち、実際に陰性だった割合","実際の陽性のうち当てられた割合は、再現率（Recall）。"],
+[2,3,"TP=40、FP=10、FN=20、TN=30 のとき、適合率（Precision）は？","0.8","0.67","0.7","0.4","適合率＝TP÷(TP＋FP)＝40÷50＝0.8。再現率は40÷60≒0.67、正解率は70÷100＝0.7。",1],
+[2,2,"がん検診のように、陽性の見逃しをできるだけ減らしたい場合に重視すべき指標は？","再現率（Recall）","適合率（Precision）","正解率（Accuracy）","学習率","再現率は、実際の陽性をどれだけ拾えたか。見逃し（FN）を減らすときに重視する。"],
+[2,2,"F値（F1スコア）とは？","適合率と再現率の調和平均","正解率と再現率の算術平均","適合率と再現率の積","AUCの2倍","適合率と再現率はトレードオフなので、バランスを見るためにF値を使う。"],
+[2,3,"陽性99%、陰性1%の不均衡データで、すべてを陽性と予測するモデルの評価として正しいものは？","正解率は99%になるが、陰性をまったく見つけられず役に立たない","正解率が99%なので優秀なモデルである","正解率は1%になる","陽性の再現率は0になる","不均衡データでは、正解率だけで判断せず、他の指標もあわせて確認する。"],
+[2,2,"ROC曲線の下側の面積であるAUCの説明として正しいものは？","1に近いほど性能が高く、ランダムな予測では約0.5になる","0に近いほど性能が高い","ランダムな予測では1になる","回帰モデルの誤差を表す","ROC曲線は、横軸に偽陽性率、縦軸に真陽性率をとる。"],
+[2,2,"ユーザーの購買や評価の履歴の類似性から商品を推薦する手法と、その弱点の組み合わせは？","協調フィルタリング／コールドスタート問題","コンテンツベースフィルタリング／勾配消失問題","k-means法／フレーム問題","主成分分析／過学習","新しいユーザーや商品は履歴がなく推薦しにくい。これがコールドスタート問題。"],
+[2,2,"強化学習のε-greedy法の目的は？","探索と活用のバランスをとる","学習率を自動調整する","過学習を防ぐ","画像のノイズを除去する","確率εでランダムに行動して探索し、それ以外は最良と思われる行動を選んで活用する。"],
+[2,3,"回帰モデルの評価指標ではないものは？","F値","平均二乗誤差（MSE）","二乗平均平方根誤差（RMSE）","平均絶対誤差（MAE）","F値は分類の評価指標。MSE、RMSE、MAEは回帰の誤差の指標。"],
+[2,2,"特徴量の次元が増えるほど、必要なデータ量が急激に増えて学習が難しくなる現象は？","次元の呪い","勾配消失問題","破滅的忘却","ノーフリーランチ定理","対策として、次元削減や特徴量の選択を行う。"],
+ 
+[3,2,"単純パーセプトロンでは解けない代表的な問題は？","XOR（排他的論理和）","AND","OR","NOT","単純パーセプトロンは、線形分離可能な問題しか解けない。隠れ層を加えた多層パーセプトロンなら解ける。"],
+[3,1,"ReLU関数の説明として正しいものは？","入力が0以下なら0、正ならそのまま出力する","出力が必ず0から1の範囲になる","出力がマイナス1から1の範囲になる","出力の合計が1になる","勾配が消えにくく、隠れ層の活性化関数として広く使われる。"],
+[3,2,"シグモイド関数を隠れ層に使うと勾配消失が起きやすい理由は？","微分の最大値が0.25と小さく、層を重ねると勾配がどんどん小さくなる","出力が負になることがあるから","微分が常に1だから","計算に乱数を使うから","tanhの微分の最大値は1で、シグモイドより勾配消失が起きにくい。"],
+[3,1,"多クラス分類の出力層でよく使われ、出力の合計が1になる活性化関数は？","ソフトマックス関数","ReLU関数","tanh関数","ステップ関数","各クラスの確率として解釈できる。"],
+[3,2,"誤差逆伝播法の説明として正しいものは？","出力の誤差を出力層から入力層側へ伝え、連鎖律で各重みの勾配を効率よく計算する","入力層から出力層へデータを順に流すだけの処理","学習率を自動で決める手法","データを増やす手法","微分の連鎖律を使うのがポイント。"],
+[3,2,"勾配降下法で、学習率が大きすぎると起きやすいことは？","最適解を飛び越えて、学習が収束しない","学習が極端に遅くなる","必ず大域的最適解に到達する","過学習が完全になくなる","学習率が小さすぎると、学習が遅くなり、局所最適解から抜け出しにくい。"],
+[3,1,"訓練データ全体を1回すべて学習に使うことを何という？","エポック","イテレーション","バッチサイズ","ステップ関数","ミニバッチ1回分のパラメータ更新がイテレーション。"],
+[3,2,"学習時にランダムに一部のニューロンを無効にして、過学習を防ぐ手法は？","ドロップアウト","バッチ正規化","早期終了","データ拡張","毎回異なるネットワークで学習するため、アンサンブル学習に似た効果がある。"],
+[3,2,"検証データの誤差が下がらなくなった時点で学習を打ち切り、過学習を防ぐ手法は？","早期終了（Early Stopping）","ドロップアウト","転移学習","ファインチューニング","シンプルで効果的な過学習対策。"],
+[3,2,"ミニバッチごとに各層への入力を平均0、分散1に正規化し、学習を安定させる手法は？","バッチ正規化","レイヤー正規化","ドロップアウト","L2正則化","レイヤー正規化はデータ1件ごとに正規化する方法で、Transformerでよく使われる。"],
+[3,2,"分類問題の誤差関数として一般的に使われるものは？","交差エントロピー","平均二乗誤差","決定係数","AUC","回帰では平均二乗誤差がよく使われる。"],
+[3,3,"最適化手法Adamの説明として正しいものは？","モーメンタムとRMSpropの考え方を組み合わせた手法","学習率を常に固定する手法","勾配を使わない最適化手法","ドロップアウトの改良版","AdaGrad、RMSprop、Adamという発展の流れを押さえる。"],
+[3,1,"ディープラーニングの学習で、並列計算に強く広く使われる演算装置は？","GPU","CPUのシングルコア","SSD","メモリカード","Googleがディープラーニング用に開発したプロセッサはTPU。"],
+[3,3,"活性化関数ReLUを使うネットワークの重みの初期値として適しているものは？","Heの初期値","Xavierの初期値","すべて0","すべて同じ値","Xavierの初期値はシグモイドやtanh向け。すべて同じ値だと学習が進まない。"],
+[3,2,"どんな問題にも万能に最良なアルゴリズムは存在しない、という定理は？","ノーフリーランチ定理","オッカムの剃刀","中心極限定理","バーニーおじさんのルール","問題に応じて手法を選ぶ必要がある。"],
+ 
+[4,1,"CNNの畳み込み層の役割は？","フィルタを使って、画像の局所的な特徴（エッジなど）を抽出する","画像全体を1つの数値に変換する","時系列データの順序を記憶する","出力の合計を1にする","同じフィルタを画像全体で使う重み共有により、パラメータ数を抑えられる。"],
+[4,2,"CNNのプーリング層の説明として正しいものは？","最大値などで領域をまとめて縮小し、位置のずれに強くする。学習するパラメータはない","学習するパラメータが最も多い層である","画像の解像度を上げる","時系列の長期依存を学習する","最大値プーリングや平均値プーリングがある。"],
+[4,3,"入力32×32、フィルタ5×5、ストライド1、パディング0の畳み込みの出力サイズは？","28×28","32×32","27×27","30×30","（入力−フィルタ＋2×パディング）÷ストライド＋1＝（32−5＋0）÷1＋1＝28。",1],
+[4,2,"各チャンネルの特徴マップの平均値をとり、全結合層の代わりにパラメータを大幅に減らす手法は？","Global Average Pooling","ゼロパディング","ドロップアウト","スキップ結合","全結合層を減らすことで過学習も抑えられる。"],
+[4,2,"ResNetで導入された、層を飛び越えて入力を足し合わせる仕組みは？","スキップ結合","プーリング","Attention","忘却ゲート","勾配が伝わりやすくなり、100層を超える深いネットワークの学習が可能になった。"],
+[4,1,"時系列データや文章のように、順序のあるデータを扱うのに適したネットワークは？","RNN（再帰型ニューラルネットワーク）","CNN","オートエンコーダ","GAN","過去の情報を隠れ状態として次の時刻に引き継ぐ。"],
+[4,2,"LSTMにあるゲートの組み合わせとして正しいものは？","入力ゲート・出力ゲート・忘却ゲート","リセットゲート・更新ゲート","生成ゲート・識別ゲート","Query・Key・Value","長期の依存関係を学習できる。GRUはリセットゲートと更新ゲートの2つで簡略化したもの。"],
+[4,2,"過去から未来、未来から過去の両方向の情報を使うRNNは？","双方向RNN","エルマンネットワーク","ResNet","U-Net","文章全体が手に入っている翻訳や品詞の推定などで有効。"],
+[4,2,"2017年の論文「Attention Is All You Need」で提案されたモデルは？","Transformer","LSTM","ResNet","AlexNet","RNNを使わずAttentionだけで構成し、並列計算で高速に学習できる。GPTやBERTの土台。"],
+[4,2,"Self-Attentionの説明として正しいものは？","同じ文の中の単語同士の関連度を計算し、文脈をとらえる","画像の局所的な特徴を抽出する","生成器と識別器を競わせる","前の時刻の隠れ状態だけを使う","Query、Key、Valueを使って関連度を計算する。"],
+[4,2,"Multi-Head Attentionの説明として正しいものは？","複数のAttentionを並列に計算し、異なる観点の関係性をとらえる","Attentionを1回だけ計算する","RNNの別名","画像を縮小する処理","複数のヘッドが、それぞれ異なる関係性に注目する。"],
+[4,3,"Transformerに位置エンコーディングが必要な理由は？","Attentionだけでは単語の順序の情報を扱えないため","計算を速くするため","画像を扱うため","過学習を防ぐため","RNNと違って順番に処理しないため、位置の情報を別に加える。"],
+[4,2,"入力を一度小さな潜在表現に圧縮し、そこから元の入力を復元するように学習するネットワークは？","オートエンコーダ","GAN","CNN","LSTM","次元削減や異常検知に使われる。潜在変数を確率分布で表すのがVAE。"],
+[4,2,"GAN（敵対的生成ネットワーク）の仕組みは？","生成器と識別器を競わせて、本物そっくりのデータを生成する","エンコーダとデコーダで翻訳する","ノイズを少しずつ除去して画像を生成する","報酬を最大化する","2014年にグッドフェローが提案した。ノイズ除去で生成するのは拡散モデル。"],
+[4,3,"Seq2Seqなどの学習で、1つ前の時刻の正解データを次の入力に使う手法は？","教師強制（Teacher Forcing）","ドロップアウト","知識蒸留","早期終了","学習が速く安定するが、推論時との違いに注意が必要。"],
+[4,1,"画像を回転、反転、切り抜きするなどして学習データを水増しする手法は？","データ拡張（Data Augmentation）","ドロップアウト","正則化","転移学習","過学習の抑制に効果がある。数字の6と9のように、反転で意味が変わる場合は注意。"],
+ 
+[5,2,"画像の中の物体の位置と種類を、1段階で高速に推定する物体検出モデルは？","YOLO","U-Net","Word2Vec","WaveNet","R-CNN系は候補領域を出してから分類する2段階型。YOLOやSSDは1段階型。"],
+[5,2,"画像の各画素がどのクラスに属するかを分類し、同じクラスの物体同士は区別しないタスクは？","セマンティックセグメンテーション","インスタンスセグメンテーション","物体検出","画像分類","個々の物体まで区別するのがインスタンス、両方を行うのがパノプティックセグメンテーション。"],
+[5,2,"医療画像のセグメンテーションで使われ、U字型の構造を持つモデルは？","U-Net","YOLO","GPT","ResNet","エンコーダとデコーダの同じ解像度の層同士をつなぐのが特徴。"],
+[5,2,"Word2Vecのskip-gramの説明として正しいものは？","中心の単語から周辺の単語を予測する","周辺の単語から中心の単語を予測する","文全体の感情を予測する","画像から説明文を生成する","周辺から中心を予測するのはCBOW。単語をベクトルで表す分散表現が得られる。"],
+[5,2,"BERTの説明として正しいものは？","Transformerのエンコーダを使い、文中の隠された単語を前後の文脈から当てる事前学習を行う","Transformerのデコーダで次の単語だけを予測する","画像生成モデルである","強化学習のアルゴリズムである","マスクされた単語を当てるMLMと、文が続くかを当てるNSPで事前学習する。"],
+[5,1,"GPTシリーズの基本的な学習方法は？","前の単語から、次に来る単語を予測する","画像の画素を分類する","生成器と識別器を競わせる","クラスタリングを行う","Transformerのデコーダ型の言語モデル。"],
+[5,1,"大量のデータで事前学習され、さまざまなタスクに応用できる大規模なモデルを何という？","基盤モデル","エキスパートシステム","決定木","ルールベースモデル","大規模言語モデル（LLM）も基盤モデルの一種。"],
+[5,3,"新しいタスクを学習した結果、以前に学習した知識を失ってしまう現象は？","破滅的忘却","過学習","勾配爆発","次元の呪い","ファインチューニングのときに注意すべき現象。"],
+[5,2,"学習済みモデルの重みの一部または全体を、新しいタスクのデータで追加学習して調整することを何という？","ファインチューニング","ゼロからの学習","知識蒸留","アノテーション","少ないデータでも高い性能を出しやすい。"],
+[5,2,"RLHFの説明として正しいものは？","人間の評価をもとに強化学習を行い、モデルの出力を人間の好みに合わせる","人間がすべての回答を手書きで用意する","画像のノイズを除去する","モデルを小さく圧縮する","対話型の生成AIを、安全で役に立つ応答に調整するために使われた。"],
+[5,2,"人が正解ラベルを付けず、データ自体から問題と正解を作って学習する方法は？","自己教師あり学習","教師あり学習","強化学習","半教師あり学習","文の一部を隠して当てさせるなど。大規模言語モデルの事前学習で使われる。"],
+[5,2,"拡散モデル（Diffusion Model）が画像を生成する仕組みは？","ノイズを加える過程を逆にたどり、ノイズを少しずつ取り除いて画像を作る","生成器と識別器を競わせる","画像をパッチに分けて分類する","ルールに従って図形を描く","現在の多くの画像生成AIで使われている。"],
+[5,1,"生成AIが、事実と異なる内容をもっともらしく出力してしまう現象は？","ハルシネーション","過学習","コールドスタート","フィルターバブル","生成AIの出力は、必ず人間が事実確認をすることが大切。"],
+[5,2,"RAG（検索拡張生成）の説明として正しいものは？","外部の文書やデータベースを検索し、その情報をもとに回答を生成する","モデルのパラメータ数を増やす","画像をテキストに変換する","人間のフィードバックで強化学習する","社内文書などを参照させることで、ハルシネーションの低減や最新情報への対応に役立つ。"],
+[5,2,"プロンプトの中にいくつかの回答例を示して、望む回答の形式を引き出す手法は？","Few-shotプロンプティング","Zero-shotプロンプティング","ファインチューニング","知識蒸留","例を示さないのがZero-shot。どちらもモデルのパラメータは更新しない。"],
+[5,2,"「段階的に考えて」のように、途中の推論過程を出力させて精度を上げるプロンプト手法は？","Chain-of-Thought","Few-shot","RLHF","RAG","複雑な計算や推論で効果が出やすい。"],
+[5,3,"大規模言語モデルのスケーリング則の説明として正しいものは？","パラメータ数、データ量、計算量を増やすと、性能がべき乗則に従って向上する","モデルを大きくするほど性能は必ず下がる","データ量は性能に関係ない","パラメータ数が一定を超えると学習できなくなる","モデルの大規模化が進んだ根拠となった経験則。"],
+[5,2,"画像とテキストのペアを大量に学習し、両者を同じ空間で対応づけるモデルは？","CLIP","YOLO","LSTM","WaveNet","対照学習で学習し、画像生成や画像検索などマルチモーダルな用途に使われる。"],
+[5,2,"大きなモデル（教師）の出力を使って、小さなモデル（生徒）を学習させる手法は？","知識蒸留","転移学習","データ拡張","アンサンブル学習","モデルを軽くする方法には、ほかに枝刈り（プルーニング）や量子化がある。"],
+[5,2,"画像分類で、モデルが画像のどこに注目して判断したかをヒートマップで示す手法は？","Grad-CAM","YOLO","Word2Vec","Adam","説明可能AI（XAI）の手法。ほかにLIMEやSHAPがある。"],
+[5,2,"Q学習とディープラーニングを組み合わせ、Atariのゲームで高い成績を出した手法は？","DQN","GAN","BERT","U-Net","DeepMindが開発した、深層強化学習の代表例。"],
+[5,3,"Vision Transformer（ViT）の特徴は？","画像を小さなパッチに分割し、単語のように並べてTransformerで処理する","畳み込み層だけで構成される","音声を生成するモデルである","強化学習専用のモデルである","画像の分野にもTransformerが広がるきっかけになった。"],
+ 
+[6,2,"データ分析プロジェクトの標準的な進め方で、ビジネス理解、データ理解、データ準備、モデリング、評価、展開の6段階からなるものは？","CRISP-DM","PoC","MLOps","アジャイル宣言","CRISP-DMでは、各段階を行き来しながら進める。"],
+[6,1,"本格的な開発の前に、AIで目的が実現できそうかを小規模に検証することを何という？","PoC（概念実証）","MLOps","アノテーション","リファクタリング","PoCを繰り返すだけで終わってしまう、PoC貧乏に注意。"],
+[6,1,"教師あり学習のために、データに正解ラベルを付ける作業を何という？","アノテーション","クレンジング","デプロイ","チューニング","ラベルの品質が、モデルの性能を大きく左右する。"],
+[6,2,"運用中に世の中のデータの傾向が変わり、モデルの精度が下がる現象は？","コンセプトドリフト","過学習","勾配消失","次元の呪い","定期的な監視と再学習が必要。運用まで含めた仕組みをMLOpsという。"],
+[6,2,"相関係数の説明として正しいものは？","マイナス1から1の値をとり、強い相関があっても因果関係があるとは限らない","0から100の値をとる","1に近いほど因果関係が強いと断定できる","相関係数が0なら、2つの変数は無関係だと断定できる","第三の要因によって生じる見かけの相関を、疑似相関という。"],
+[6,3,"データ「1, 2, 3, 4, 100」の平均値と中央値の組み合わせは？","平均値22、中央値3","平均値3、中央値22","平均値22、中央値22","平均値20、中央値3","合計110÷5＝22。中央値は外れ値の影響を受けにくい。",1],
+[6,2,"正規分布で、平均±1標準偏差の範囲に含まれるデータの割合はおよそ何％？","約68％","約50％","約95％","約99.7％","±2標準偏差で約95％、±3標準偏差で約99.7％。"],
+[6,1,"分散と標準偏差の関係として正しいものは？","標準偏差は分散の平方根","分散は標準偏差の半分","標準偏差は分散の2乗","両者は同じ値","どちらもデータのばらつきの大きさを表す。"],
+[6,3,"AI開発プロジェクトの進め方として適切なものは？","精度が事前にわからないため、検証を繰り返しながら段階的に進める","最初にすべての仕様と精度を確定させてから一気に開発する","学習データは運用開始後に集めればよい","精度が出なければ必ず開発会社の責任になる","AIの性能はデータ次第で事前に保証しにくいため、探索的、段階的に進める。"],
+ 
+[7,2,"日本の著作権法30条の4の説明として正しいものは？","AIの学習など情報解析が目的なら、原則として著作権者の許諾なく著作物を利用できる","AIの学習に使う場合は、必ず著作権者の許諾が必要である","日本ではAIの学習に著作物を使うことは禁止されている","AIが作った作品にはすべて著作権が発生するという規定である","著作物の表現を楽しむ、つまり享受することが目的ではない利用が対象。"],
+[7,3,"著作権法30条の4について、誤っている説明は？","情報解析が目的であれば、どんな場合でも許諾なく利用できる","享受を目的としない利用が対象である","著作権者の利益を不当に害する場合は対象外になる","AIの学習データの収集にも適用されうる","著作権者の利益を不当に害する場合は例外。どんな場合でもOKではない、というひっかけ。"],
+[7,2,"AIが自動生成した画像の著作権についての考え方として正しいものは？","人間の創作的な寄与がなく、AIが自律的に生成したものは著作物と認められにくい","AIが作れば必ずAI自身が著作者になる","AIの開発会社が自動的に著作者になる","生成ボタンを押した人は必ず著作者になる","人がAIを道具として使い、創作的に寄与した場合は著作物となりうる。"],
+[7,2,"AI生成物が既存の著作物の著作権侵害になるかを判断するときに重視される2つの要件は？","類似性と依拠性","新規性と進歩性","有用性と非公知性","公平性と透明性","既存の作品に似ていて、それをもとにしている場合に侵害となりうる。新規性と進歩性は特許の要件。"],
+[7,2,"不正競争防止法の営業秘密として保護されるための3要件は？","秘密管理性・有用性・非公知性","新規性・進歩性・産業上の利用可能性","類似性・依拠性・公開性","限定提供性・相当蓄積性・電磁的管理性","最後の選択肢は、限定提供データの要件。"],
+[7,3,"不正競争防止法の限定提供データの要件として正しい組み合わせは？","限定提供性・相当蓄積性・電磁的管理性","秘密管理性・有用性・非公知性","新規性・進歩性・創作性","適法性・公平性・透明性","IDやパスワードで管理し、特定の相手に提供するデータを保護する制度。2018年の法改正で導入された。"],
+[7,1,"特許として認められるための主な要件の組み合わせは？","新規性・進歩性・産業上の利用可能性","類似性・依拠性","秘密管理性・有用性","創作性・表現性","AIを使った発明も、要件を満たせば特許の対象になりうる。"],
+[7,2,"個人情報保護法の個人識別符号に当たるものは？","顔認証に使う顔の特徴データ","年齢だけの情報","商品の売上データ","気温のデータ","指紋のデータ、マイナンバー、旅券番号なども個人識別符号に当たる。"],
+[7,2,"本人の人種、信条、病歴、犯罪歴など、取り扱いに特に配慮が必要な個人情報を何という？","要配慮個人情報","匿名加工情報","仮名加工情報","限定提供データ","取得には原則として本人の同意が必要。オプトアウトによる第三者提供もできない。"],
+[7,3,"仮名加工情報と匿名加工情報の違いとして正しいものは？","仮名加工情報は主に社内での分析用で、原則として第三者に提供できない","仮名加工情報は自由に第三者に提供できる","匿名加工情報は、元の個人を復元できるように加工したものである","両者はまったく同じ制度である","匿名加工情報は、個人を特定も復元もできないよう加工し、一定のルールのもとで第三者に提供できる。"],
+[7,2,"経済産業省の「AI・データの利用に関する契約ガイドライン」が推奨するAI開発の進め方は？","アセスメント、PoC、開発、追加学習と進む探索的段階型","最初に一括で請負契約を結び、精度を保証させる","契約を結ばずに開発を始める","開発が終わってからデータを集める","段階ごとに契約を結び、次に進むかどうかを判断する。"],
+[7,3,"AI開発のPoC段階の契約形態として、一般的に適しているとされるものは？","準委任契約","請負契約","売買契約","賃貸借契約","PoCは結果が不確実なため、成果物の完成義務がない準委任契約が適するとされる。請負契約は完成義務を負う。"],
+[7,2,"EUのAI規則（AI Act）の基本的な考え方は？","リスクの大きさに応じて段階的に規制するリスクベースアプローチ","すべてのAIを一律に禁止する","規制は一切設けない","生成AIだけを対象とする","許容できないリスク、高リスク、限定的リスク、最小リスクに分けて規制する。"],
+[7,2,"2024年に総務省と経済産業省が公表した、AI開発者、AI提供者、AI利用者の取り組みをまとめた指針は？","AI事業者ガイドライン","人間中心のAI社会原則","GDPR","広島AIプロセス","既存の複数のガイドラインを統合したもので、法的拘束力のないソフトローの位置づけ。"],
+[7,2,"2023年のG7広島サミットをきっかけに始まった、生成AIに関する国際的なルール作りの枠組みは？","広島AIプロセス","パリ協定","GDPR","ダートマス会議","国際指針や、開発者向けの国際行動規範がまとめられた。"],
+[7,2,"EUの個人データ保護のルールで、EU域外へのデータの移転にも厳しい条件を定めているものは？","GDPR（一般データ保護規則）","AI事業者ガイドライン","特許法","CRISP-DM","日本はEUから十分性認定を受けており、一定の条件で個人データの移転が認められている。"],
+[7,2,"過去の採用データで学習したAIが、特定の性別を不利に評価してしまった問題の主な原因は？","学習データに含まれていたバイアス（偏り）","GPUの故障","学習率が大きすぎたこと","ドロップアウトを使ったこと","データの偏りが、そのままAIの判断に反映される。公平性の確保が重要。"],
+[7,1,"AIがどのように判断したかを、人が理解できるようにする技術や考え方を何という？","説明可能AI（XAI）","ディープフェイク","フィルターバブル","ブラックボックス化","説明可能性や透明性は、AI倫理の重要な原則。"],
+[7,1,"ディープラーニングを使って、実在の人物が言っていない発言をしているような偽の動画を作る技術は？","ディープフェイク","XAI","RAG","フィルターバブル","偽情報の拡散や詐欺などに悪用されるリスクがある。"],
+[7,1,"SNSなどで自分の好みに合う情報ばかりが表示され、異なる意見に触れにくくなる現象は？","フィルターバブル","ハルシネーション","コールドスタート","コンセプトドリフト","似た意見ばかりが反響し合うエコーチェンバーとあわせて覚える。"],
+[7,2,"企画や設計の段階から、プライバシー保護をあらかじめ組み込んでおく考え方は？","プライバシー・バイ・デザイン","オプトアウト","データ拡張","オープンイノベーション","後から対策を追加するのではなく、最初から組み込むのがポイント。"],
+[7,2,"人の判断を介さずに、標的を選んで攻撃する自律型の兵器を何という？","LAWS（自律型致死兵器システム）","RLHF","GAN","PoC","国際的に、規制のあり方が議論されている。"],
+[7,1,"業務で外部の生成AIサービスを使うときの注意として適切なものは？","社外秘の情報や個人情報を入力しないなど、社内ルールに従って使う","出力は常に正しいので、そのまま社外に出してよい","機密情報も自由に入力してよい","著作権の確認は一切不要である","入力した情報が学習に使われたり、外部に漏れたりするリスクがある。"],
+[7,3,"2025年に日本で成立した、AIの研究開発と活用の推進を目的とする法律の特徴として正しいものは？","罰則による規制よりも、研究開発と活用の推進を基本とする法律である","すべての生成AIの利用を禁止する","EUのAI Actと同じく、リスク区分ごとの罰則を細かく定めている","AIを著作者として認めた","正式名称は、人工知能関連技術の研究開発及び活用の推進に関する法律。"]
+];
+ 
+/* ---------- 共通 ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let ST=LS.get('gk_stat',{q:{},days:{}});
+let SET=Object.assign({min:15,rate:1.0,think:5,ch:[1,2,3,4,5,6,7],lv:[1,2,3]},LS.get('gk_set',{}));
+const saveST=()=>LS.set('gk_stat',ST),saveSET=()=>LS.set('gk_set',SET);
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const hid=s=>{let x=5381;for(const c of s)x=((x<<5)+x+c.codePointAt(0))|0;return 'q'+(x>>>0).toString(36)};
+const stars=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+ 
+/* ---------- 問題データ（内蔵＋自動読み込み＋手動追加） ---------- */
+let ALL=[],CNT={base:0,auto:0,extra:0},AUTOMSG='';
+const mk=(c,l,q,a,w1,w2,w3,ex,calc,src)=>({id:hid(q),ch:+c,lv:+l,q,a,w:[w1,w2,w3],ex:ex||'',calc:!!+calc,src});
+function parseCSV(t){
+t=t.replace(/^\uFEFF/,'');const rows=[];let r=[],f='',q=false;
+for(let i=0;i<t.length;i++){const c=t[i];
+if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+else if(c=='"')q=true;
+else if(c==','){r.push(f);f=''}
+else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;r.push(f);rows.push(r);r=[];f=''}
+else f+=c}
+if(f!==''||r.length){r.push(f);rows.push(r)}
+return rows}
+function csvQs(t,src){
+return parseCSV(t).filter(r=>r.length>=7&&/^[1-7]$/.test(r[0].trim())&&r[2].trim()&&r[3].trim())
+.map(r=>{const l=Math.min(3,Math.max(1,parseInt(r[1])||2));
+return mk(r[0].trim(),l,r[2].trim(),r[3].trim(),r[4].trim(),r[5].trim(),r[6].trim(),(r[7]||'').trim(),(r[8]||'0').trim()=='1'?1:0,src)})}
+function rebuild(){
+const seen=new Set();ALL=[];CNT={base:0,auto:0,extra:0};
+const add=q=>{if(seen.has(q.id))return;seen.add(q.id);ALL.push(q);CNT[q.src]++};
+BASE.forEach(b=>add(mk(...b.slice(0,8),b[8]||0,'base')));
+const au=LS.get('gk_auto',{});Object.keys(au).sort((a,b)=>a-b).forEach(k=>csvQs(au[k],'auto').forEach(add));
+LS.get('gk_extra',[]).forEach(q=>add(Object.assign(q,{src:'extra'})));
+}
+/* 起動時に q2.csv, q3.csv … を順に読み込む（番号が途切れたら終了） */
+async function autoLoad(){
+if(!/^https?:/.test(location.protocol)){AUTOMSG='自動読み込み：GitHub Pagesで開いたときのみ動作';return}
+const got={};let n=2;
+try{for(;n<=50;n++){const r=await fetch('q'+n+'.csv?t='+Date.now(),{cache:'no-store'});if(!r.ok)break;got[n]=await r.text()}}
+catch(e){AUTOMSG='オフラインのため、前回読み込んだ問題を使っています';return}
+LS.set('gk_auto',got);rebuild();
+AUTOMSG=Object.keys(got).length?`自動読み込み：q2〜q${n-1}.csv（${CNT.auto}問）`:'自動読み込み：追加のCSVはまだありません';
+if($('#home').classList.contains('on'))renderHome();
+if($('#set').classList.contains('on'))renderSet();
+}
+ 
+/* ---------- 出題 ---------- */
+let S=null,timer=null,wake=null,gen=0,JV=null,paused=false;
+function chAcc(){const a={};for(let c=1;c<=7;c++)a[c]={a:0,c:0};ALL.forEach(q=>{const s=ST.q[q.id];if(s){a[q.ch].a+=s.a;a[q.ch].c+=s.c}});return a}
+function poolFor(mode){
+if(mode=='rev')return ALL.filter(q=>ST.q[q.id]&&ST.q[q.id].w);
+return ALL.filter(q=>SET.ch.includes(q.ch)&&SET.lv.includes(q.lv)&&!(mode=='run'&&q.calc));
+}
+function remember(q){S.recent.push(q.id);if(S.recent.length>Math.min(20,Math.floor(S.pool.length/2)))S.recent.shift();return q}
+function pick(){
+let p=S.pool.filter(q=>!S.recent.includes(q.id));if(!p.length)p=S.pool;if(!p.length)return null;
+const acc=chAcc();
+const w=p.map(q=>{const s=ST.q[q.id],A=acc[q.ch],r=A.a?A.c/A.a:.5;return 1+(1-r)*2+(s?0:1)+(s&&s.w?2:0)});
+let x=Math.random()*w.reduce((a,b)=>a+b,0);
+for(let i=0;i<p.length;i++){x-=w[i];if(x<=0)return remember(p[i])}
+return remember(p[p.length-1]);
+}
+function record(q,ok){
+const s=ST.q[q.id]||(ST.q[q.id]={a:0,c:0,s:0,w:0});
+s.a++;if(ok){s.c++;s.s++;if(s.w&&s.s>=2)s.w=0}else{s.s=0;s.w=1}
+const d=today();ST.days[d]=(ST.days[d]||0)+1;saveST();
+ok?S.ok++:S.ng++;
+}
+const left=()=>SET.min*60000-(((paused&&S.pz)?S.pz:Date.now())-S.t0);
+const fmt=ms=>{const s=Math.ceil(Math.max(0,ms)/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function tick(){if(!S)return;const t='残り '+fmt(left());$('#qtime').textContent=t;$('#rtime').textContent=t}
+async function lock(){try{if('wakeLock' in navigator)wake=await navigator.wakeLock.request('screen')}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(S&&document.visibilityState=='visible')lock()});
+const info=()=>(S.mode=='rev'?'復習 ':'')+'第'+S.n+'問　⭕'+S.ok+' ❌'+S.ng;
+ 
+function start(mode){
+const pool=poolFor(mode);
+if(!pool.length){alert(mode=='rev'?'復習する問題はまだありません。先にバイク／ランモードで解いてください。':'出題できる問題がありません。設定で分野・難易度を確認してください。');return}
+if(mode=='run'&&!('speechSynthesis' in window)){alert('この端末は読み上げに対応していません');return}
+S={mode,pool,t0:Date.now(),pz:0,n:0,ok:0,ng:0,heard:0,recent:[],cur:null};paused=false;
+lock();clearInterval(timer);timer=setInterval(tick,1000);tick();
+if(mode=='run'){speechSynthesis.cancel();$('#rpause').textContent='⏸ 一時停止';go('run');runQ()}
+else{go('quiz');showQ()}
+}
+ 
+/* ---------- バイク／復習モード ---------- */
+function showQ(){
+if(S.n>0&&left()<=0)return finish();
+if(S.mode=='rev')S.pool=poolFor('rev');
+const q=pick();if(!q)return finish();
+S.n++;const opts=shuf([q.a,...q.w]);S.cur={q,opts,ans:false};
+$('#qinfo').textContent=info();
+$('#qtag').textContent=`${q.ch}. ${CH[q.ch]}　${stars(q.lv)}${q.calc?'　🧮計算':''}`;
+$('#qtext').textContent=q.q;
+$('#opts').innerHTML=opts.map((o,i)=>`<button class="opt" onclick="answer(${i})"><span class="no">${i+1}</span><span>${esc(o)}</span></button>`).join('');
+$('#fb').style.display='none';$('#next').style.display='none';scrollTo(0,0);
+}
+function answer(i){
+const c=S.cur;if(c.ans)return;c.ans=true;
+const k=c.opts.indexOf(c.q.a),ok=i===k;record(c.q,ok);
+[...$('#opts').children].forEach((b,j)=>b.classList.add(j===k?'good':j===i?'bad':'dim'));
+$('#res').className=ok?'okc':'ngc';$('#res').textContent=ok?'⭕ 正解！':'❌ 不正解（正解は '+(k+1)+'）';
+$('#ex').textContent=c.q.ex;$('#fb').style.display='block';$('#next').style.display='block';
+$('#qinfo').textContent=info();
+$('#fb').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+ 
+/* ---------- ランモード（読み上げ） ---------- */
+function pickVoice(){const v=speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang));JV=v.find(v=>/Kyoko|O-ren|Google/.test(v.name))||v[0]||null}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.
