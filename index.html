@@ -86,6 +86,7 @@ h2{font-size:17px;color:#aaa;margin:18px 0 6px}
  
 <div id="run" class="scr">
 <div class="bar"><span id="rinfo"></span><span id="rtime"></span></div>
+<div class="row" style="margin-top:8px"><button class="chip" onclick="spd(-0.25)">🐢 遅く</button><div class="chip" id="rspd"></div><button class="chip" onclick="spd(0.25)">🐇 速く</button></div>
 <div id="rst"></div>
 <div class="tag" id="rtag"></div>
 <div class="q" id="rq"></div>
@@ -443,7 +444,7 @@ const chip=(on,label,fn,w)=>`<button class="chip${w?' w':''}${on?' sel':''}" onc
 function renderSet(){
   $('#chs').innerHTML=CH.slice(1).map((n,i)=>{const on=SET.ch.includes(i+1);return chip(on,`${on?'☑':'☐'} ${i+1}. ${n}（${ALL.filter(q=>q.ch==i+1).length}問）`,`tog('ch',${i+1})`,1)}).join('');
   $('#lvs').innerHTML=[[1,'★ 基礎'],[2,'★★ 標準'],[3,'★★★ 応用']].map(([v,l])=>chip(SET.lv.includes(v),l,`tog('lv',${v})`)).join('');
-  $('#rates').innerHTML=[0.8,1,1.2,1.5].map(v=>chip(SET.rate==v,v+'倍',`SET.rate=${v};saveSET();renderSet()`)).join('');
+  $('#rates').innerHTML=[1,1.25,1.5,1.75,2,2.5].map(v=>chip(SET.rate==v,v+'倍',`SET.rate=${v};saveSET();renderSet()`)).join('');
   $('#thinks').innerHTML=[3,5,8,12].map(v=>chip(SET.think==v,v+'秒',`SET.think=${v};saveSET();renderSet()`)).join('');
   $('#xinfo').innerHTML=`内蔵 ${CNT.base}問／自動読み込み ${CNT.auto}問／手動追加 ${CNT.extra}問<br>${esc(AUTOMSG||'自動読み込み：確認中…')}`;
 }
@@ -464,9 +465,10 @@ $('#csvin').addEventListener('change',e=>{
   r.readAsText(file,'UTF-8')});
 function clearExtra(){if(confirm('手動で追加した問題を削除しますか？（自動読み込みの問題は残ります）')){LS.set('gk_extra',[]);rebuild();renderSet()}}
 function resetStat(){if(confirm('成績をすべてリセットしますか？')){ST={q:{},days:{}};saveST();renderSet()}}
+function spd(d){SET.rate=Math.round(Math.min(3,Math.max(0.5,SET.rate+d))*100)/100;saveSET();$('#rspd').textContent='🔊 '+SET.rate+'倍'}
 function go(id){
-  document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==id));
-  if(id=='home')renderHome();if(id=='stats')renderStats();if(id=='set')renderSet();scrollTo(0,0);
+document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==id));
+if(id=='home')renderHome();if(id=='stats')renderStats();if(id=='set')renderSet();if(id=='run')spd(0);scrollTo(0,0);
 }
 
 rebuild();go('home');autoLoad();
